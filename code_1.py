@@ -33,7 +33,7 @@ class cell:
             color = GREEN
         elif self.is_end == True:
             color = RED
-        pygame.draw.rect(window,color,(self.x*cells_len ,self.y*cells_len ,cells_len ,cells_len ))
+        pygame.draw.rect(window,color,(self.x*cells_len+2 ,self.y*cells_len+2 ,cells_len-4 ,cells_len -4))
         #window.blit(text, (self.x*cells_len ,self.y*cells_len))
 
 tab = [[cell(i,j)for i in range(WIDTH//cells_len)] for j in range(HEIGHT//cells_len-2)]
@@ -84,21 +84,25 @@ def main():
                     x, y = pygame.mouse.get_pos()
                     i,j = x//cells_len , y//cells_len
                     #print("Right-click detected at:", x//50, y//50)
-                    change_to_wall(i,j)
+                    #TODO 
+                    '''verifier ce -21'''
+                    if j<=WIDTH//cells_len-21:
+                        change_to_wall(i,j)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                     '''right click'''
                     x, y = pygame.mouse.get_pos()
                     i,j = x//cells_len , y//cells_len
-                    if len(start_end)<2:
-                        if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
-                            if len(start_end)==0:
-                                tab[j][i].is_start = True
-                                print("start, ")
-                            if len(start_end)==1:
-                                tab[j][i].is_end = True
-                                print("end")
-                            start_end.append((i,j))
-                            
+                    if j<=WIDTH//cells_len-21:
+                        if len(start_end)<2:
+                            if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
+                                if len(start_end)==0:
+                                    tab[j][i].is_start = True
+                                    print("start, ")
+                                if len(start_end)==1:
+                                    tab[j][i].is_end = True
+                                    print("end")
+                                start_end.append((i,j))
+                                
 
     pygame.quit()
 
