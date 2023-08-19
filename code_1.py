@@ -121,12 +121,10 @@ def get_nearest_neighbor(cell,dic):
 def dijkstra_animation():
     cells_dist = {(x, y): float('inf') for y in range(HEIGHT) for x in range(WIDTH)}
     cells_dist[get_cord(start_end[0])] = 0
-    #cells_dist_copy = dict(cells_dist)
     current = start_end[0]
     UnvisitedCellWithFiniteDistance = {get_cord(current):0}
     visited = []
     while start_end[1] not in visited :
-        #print(current.x,' ',current.y)
         next_cells = get_next(current)
         for elt in next_cells:
             if elt in visited:
@@ -138,7 +136,6 @@ def dijkstra_animation():
                 coord = get_cord(elt)
                 cells_dist[coord] = current_distance + 1
                 UnvisitedCellWithFiniteDistance[coord] = current_distance + 1
-                #cells_dist_copy[get_cord(elt)] = current_distance + 1
         visited.append(current)
         tab[current_coord[1]][current_coord[0]].is_visited = True
         current.is_visited = True
@@ -153,9 +150,6 @@ def dijkstra_animation():
         current_coord = get_cord(current)
         tab[current_coord[1]][current_coord[0]].is_path = True
         fill_window(tab)
-
-    print(cells_dist[get_cord(current)])
-    
     return None
 
 def main():
