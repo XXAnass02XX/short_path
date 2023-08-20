@@ -82,6 +82,7 @@ def change_to_wall(i,j):
                 else:
                     tab[elt[1]][elt[0]].possible_next.remove('u')
             s+=1
+        fill_window(tab)
 
 def get_cord(cell):
     '''given a cell this funct returns the coordinates of this cell'''
@@ -157,35 +158,51 @@ def main():
     running= True
     while running:
         fill_window(tab)
-        for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running= False
-                    break
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    '''left click'''
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            running= False
+            break
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            '''left click'''
+            x, y = pygame.mouse.get_pos()
+            i,j = x//cells_len , y//cells_len
+            #TODO 
+            '''verifier ce -21'''
+            if j<=WIDTH//cells_len-21:
+                change_to_wall(i,j)
+                while pygame.mouse.get_pressed(num_buttons=3)[0]:
                     x, y = pygame.mouse.get_pos()
                     i,j = x//cells_len , y//cells_len
-                    #TODO 
-                    '''verifier ce -21'''
-                    if j<=WIDTH//cells_len-21:
-                        change_to_wall(i,j)
-                    elif len(start_end) ==2 and cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
-                        print('yesssssssssss')
-                        dijkstra_animation()
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                    '''right click'''
-                    x, y = pygame.mouse.get_pos()
-                    i,j = x//cells_len , y//cells_len
-                    if j<=WIDTH//cells_len-21:
-                        if len(start_end)<2:
-                            if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
-                                if len(start_end)==0:
-                                    tab[j][i].is_start = True
-                                    print("start, ")
-                                if len(start_end)==1:
-                                    tab[j][i].is_end = True
-                                    print("end")
-                                start_end.append(tab[j][i])
+                    event = pygame.event.poll()
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        break
+                    change_to_wall(i,j)
+            elif len(start_end) ==2 and cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+                print('in')
+                while pygame.mouse.get_pressed(num_buttons=3)[0]:
+                    print('in in')
+                    event = pygame.event.poll()
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        print('in in in')
+                        break
+                x, y = pygame.mouse.get_pos()
+                i,j = x//cells_len , y//cells_len
+                if cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+                    dijkstra_animation()
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            '''right click'''
+            x, y = pygame.mouse.get_pos()
+            i,j = x//cells_len , y//cells_len
+            if j<=WIDTH//cells_len-21:
+                if len(start_end)<2:
+                    if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
+                        if len(start_end)==0:
+                            tab[j][i].is_start = True
+                            print("start, ")
+                        if len(start_end)==1:
+                            tab[j][i].is_end = True
+                            print("end")
+                        start_end.append(tab[j][i])
     pygame.quit()
 
 if __name__ == '__main__':
