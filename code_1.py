@@ -3,7 +3,7 @@ import pygame
 import heapq
 import time 
 WIDTH,HEIGHT = 1800,900
-cells_len = 50
+cells_len = 40
 MAX_FPS = 60
 WHITE =(255,255,255)
 BLACK = (0,0,0)
@@ -13,8 +13,7 @@ COLOR1=(155,0,155)
 pygame.init()
 window = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("pong game")
-font = pygame.font.Font(None,30)
-start_end = []
+font = pygame.font.Font(None,cells_len)
 class cell:
     def __init__(self,x,y):
         '''defining a normal cell which is not a wall at the beginning'''
@@ -55,7 +54,7 @@ def fill_window(grid):
     pygame.draw.rect(window, (0, 0, 0), (cells_len, HEIGHT -2*cells_len + cells_len//2, cells_len*3, cells_len))
     pygame.draw.rect(window, (150, 50, 150), (cells_len+2, HEIGHT -2*cells_len + cells_len//2+2, cells_len*3-4, cells_len-4))
     text_surface = font.render('start', True, (0,0,0))
-    window.blit(text_surface, (cells_len+50, HEIGHT -2*cells_len + cells_len//2+15))
+    window.blit(text_surface, (2*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
     pygame.display.update()
 
 def in_grid(a):
@@ -119,7 +118,7 @@ def get_nearest_neighbor(cell,dic):
             b = d
     return a
 
-def dijkstra_animation():
+def dijkstra_animation(start_end):
     cells_dist = {(x, y): float('inf') for y in range(HEIGHT) for x in range(WIDTH)}
     cells_dist[get_cord(start_end[0])] = 0
     current = start_end[0]
@@ -154,6 +153,7 @@ def dijkstra_animation():
     return None
 
 def main():
+    start_end = []
     '''main fonc that displays the program window'''
     running= True
     while running:
@@ -166,9 +166,9 @@ def main():
             '''left click'''
             x, y = pygame.mouse.get_pos()
             i,j = x//cells_len , y//cells_len
-            #TODO 
-            '''verifier ce -21'''
-            if j<=WIDTH//cells_len-21:
+            print(y,'*** ',j)
+            print(len(tab))
+            if j<len(tab):
                 change_to_wall(i,j)
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
                     x, y = pygame.mouse.get_pos()
@@ -176,24 +176,22 @@ def main():
                     event = pygame.event.poll()
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         break
-                    change_to_wall(i,j)
+                    if j<len(tab):
+                        change_to_wall(i,j)
             elif len(start_end) ==2 and cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
-                print('in')
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
-                    print('in in')
                     event = pygame.event.poll()
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                        print('in in in')
                         break
                 x, y = pygame.mouse.get_pos()
                 i,j = x//cells_len , y//cells_len
                 if cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
-                    dijkstra_animation()
+                    dijkstra_animation(start_end)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             '''right click'''
             x, y = pygame.mouse.get_pos()
             i,j = x//cells_len , y//cells_len
-            if j<=WIDTH//cells_len-21:
+            if j<len(tab):
                 if len(start_end)<2:
                     if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
                         if len(start_end)==0:
@@ -203,6 +201,17 @@ def main():
                             tab[j][i].is_end = True
                             print("end")
                         start_end.append(tab[j][i])
+        elif event.type == pygame.KEYDOWN:
+            if event.unicode.lower() == 'r':
+                for line in tab:
+                    for cell in line:
+                        cell.is_end = False
+                        cell.is_start =False
+                        cell.is_wall = False
+                        cell.is_path = False
+                        cell.is_visited = False
+                        cell.possible_next = ['r','l','u','d']
+                start_end = []
     pygame.quit()
 
 if __name__ == '__main__':
