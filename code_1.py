@@ -3,7 +3,7 @@ import pygame
 import heapq
 import time 
 WIDTH,HEIGHT = 1800,900
-cells_len = 40
+cells_len = 30
 MAX_FPS = 60
 WHITE =(255,255,255)
 BLACK = (0,0,0)
@@ -14,6 +14,7 @@ pygame.init()
 window = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("pong game")
 font = pygame.font.Font(None,cells_len)
+clock = pygame.time.Clock()
 class cell:
     def __init__(self,x,y):
         '''defining a normal cell which is not a wall at the beginning'''
@@ -66,7 +67,8 @@ def in_grid(a):
 
 def change_to_wall(i,j):
     '''switching the cell with the (i,j) coordinates to a wall'''
-    if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
+    cell_a = tab[j][i]
+    if cell_a.is_wall == False and cell_a.is_start == False and cell_a.is_end == False:
         tab[j][i].is_wall = True
         to_change = [(i,j-1),(i-1,j),(i+1,j),(i,j+1)]
         s=0
@@ -81,7 +83,8 @@ def change_to_wall(i,j):
                 else:
                     tab[elt[1]][elt[0]].possible_next.remove('u')
             s+=1
-        fill_window(tab)
+        pygame.draw.rect(window, (0, 0, 0), (i*cells_len+2, j*cells_len+2, cells_len-4, cells_len-4))
+        pygame.display.update()
 
 def get_cord(cell):
     '''given a cell this funct returns the coordinates of this cell'''
@@ -136,16 +139,18 @@ def dijkstra_animation(start_end):
                 coord = get_cord(elt)
                 cells_dist[coord] = current_distance + 1
                 UnvisitedCellWithFiniteDistance[coord] = current_distance + 1
+                pygame.draw.rect(window, (100,200,255), ((coord[0])*cells_len+2, (coord[1])*cells_len+2, cells_len-4, cells_len-4))
         visited.append(current)
         tab[current_coord[1]][current_coord[0]].is_visited = True
         current.is_visited = True
-
         UnvisitedCellWithFiniteDistance.pop(current_coord)
         current_coord = min(UnvisitedCellWithFiniteDistance, key=lambda k: UnvisitedCellWithFiniteDistance[k])
         current = tab[current_coord[1]][current_coord[0]]
-        fill_window(tab)
+        pygame.display.update()
+        #fill_window(tab)
     current = start_end[1]
     while current is not start_end[0]:
+        '''draw the shortest path starting from the end to the start'''
         current = get_nearest_neighbor(current,cells_dist)
         current_coord = get_cord(current)
         tab[current_coord[1]][current_coord[0]].is_path = True
@@ -166,8 +171,6 @@ def main():
             '''left click'''
             x, y = pygame.mouse.get_pos()
             i,j = x//cells_len , y//cells_len
-            print(y,'*** ',j)
-            print(len(tab))
             if j<len(tab):
                 change_to_wall(i,j)
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
@@ -187,6 +190,7 @@ def main():
                 i,j = x//cells_len , y//cells_len
                 if cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
                     dijkstra_animation(start_end)
+                
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             '''right click'''
             x, y = pygame.mouse.get_pos()
@@ -201,7 +205,7 @@ def main():
                             tab[j][i].is_end = True
                             print("end")
                         start_end.append(tab[j][i])
-        elif event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN: 
             if event.unicode.lower() == 'r':
                 for line in tab:
                     for cell in line:
