@@ -2,8 +2,8 @@
 import pygame
 import heapq
 import time 
-WIDTH,HEIGHT = 1800,900
-cells_len = 30
+WIDTH,HEIGHT = 1200,800
+cells_len = 20
 MAX_FPS = 60
 WHITE =(255,255,255)
 BLACK = (0,0,0)
