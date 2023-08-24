@@ -2,10 +2,8 @@
 from distutils import core
 from tracemalloc import start
 import pygame
-import heapq
-from math import sqrt
-import time 
-WIDTH,HEIGHT = 1200,800
+from math import sqrt 
+WIDTH,HEIGHT = 1000,700
 cells_len = 20
 MAX_FPS = 60
 WHITE =(255,255,255)
@@ -29,6 +27,7 @@ class cell:
         self.is_end = False
         self.is_visited = False
         self.is_path = False
+        self.parent = None
     def draw(self,window):
         '''draw the paddle'''
         color = WHITE
@@ -56,8 +55,13 @@ def fill_window(grid):
 
     pygame.draw.rect(window, (0, 0, 0), (cells_len, HEIGHT -2*cells_len + cells_len//2, cells_len*3, cells_len))
     pygame.draw.rect(window, (150, 50, 150), (cells_len+2, HEIGHT -2*cells_len + cells_len//2+2, cells_len*3-4, cells_len-4))
-    text_surface = font.render('start', True, (0,0,0))
-    window.blit(text_surface, (2*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
+    text_surface = font.render('dijkstra', True, (0,0,0))
+    window.blit(text_surface, (2*cells_len-10,HEIGHT -2*cells_len + cells_len//2+2))
+
+    pygame.draw.rect(window, (0, 0, 0), (5*cells_len, HEIGHT -2*cells_len + cells_len//2, cells_len*3, cells_len))
+    pygame.draw.rect(window, (150, 50, 150), (5*cells_len+2, HEIGHT -2*cells_len + cells_len//2+2, cells_len*3-4, cells_len-4))
+    text_surface = font.render('a start', True, (0,0,0))
+    window.blit(text_surface, (5.5*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
     pygame.display.update()
 
 def in_grid(a):
@@ -152,6 +156,7 @@ def dijkstra_animation(start_end):
     current = start_end[0]
     UnvisitedCellWithFiniteDistance = {get_cord(current):0}
     visited = []
+    no_path = False
     while start_end[1] not in visited :
         next_cells = get_next(current)
         for elt in next_cells:
@@ -170,27 +175,31 @@ def dijkstra_animation(start_end):
         tab[current_coord[1]][current_coord[0]].is_visited = True
         current.is_visited = True
         UnvisitedCellWithFiniteDistance.pop(current_coord)
+        if len(UnvisitedCellWithFiniteDistance) == 0:
+            no_path = True
+            print('no possible path')
+            break
         current_coord = min(UnvisitedCellWithFiniteDistance, key=lambda k: UnvisitedCellWithFiniteDistance[k])
         current = tab[current_coord[1]][current_coord[0]]
         pygame.display.update()
         #fill_window(tab)
-    current = start_end[1]
-    while current is not start_end[0]:
-        '''draw the shortest path starting from the end to the start'''
-        current = get_nearest_neighbor(current,cells_dist)
-        current_coord = get_cord(current)
-        tab[current_coord[1]][current_coord[0]].is_path = True
-        fill_window(tab)
-    return None
+    if not no_path:
+        current = start_end[1]
+        while current is not start_end[0]:
+            '''draw the shortest path starting from the end to the start'''
+            current = get_nearest_neighbor(current,cells_dist)
+            current_coord = get_cord(current)
+            tab[current_coord[1]][current_coord[0]].is_path = True
+            fill_window(tab)
 
 def g_cost(start_end,coord):
-    return abs(start_end[0].x -coord[0])+ abs(start_end[0].y -coord[1])
-
-def f_cost(start_end,coord):
-    return abs(start_end[1].x -coord[0])+ abs(start_end[1].y -coord[1])
+    return sqrt(abs(start_end[0].x -coord[0])**2+ abs(start_end[0].y -coord[1])**2)
 
 def h_cost(start_end,coord):
-    return f_cost(start_end,coord)+g_cost(start_end,coord)
+    return sqrt(abs(start_end[1].x -coord[0])**2+ abs(start_end[1].y -coord[1])**2)
+
+def f_cost(start_end,coord):
+    return h_cost(start_end,coord)+g_cost(start_end,coord)
 
 def change_to_cost_for_heapq(start_end,cell):
     coord = get_cord(cell)
@@ -217,44 +226,36 @@ def get_neighbor_with_small_h_cost(cell,d):
 
 def a_star_animation(start_end):
     '''given a start point and an end point , this function does the simulation of a start algorithme for shortest path between them'''
-    #TODO '''in case the distance is 0'''
-    #initialisation
     visited = {}
-    potentiel_next = []
-    #final = change_to_cost_for_heapq(start_end,start_end[1])
-    final = get_cord(start_end[1])
-    current = start_end[0]
-    not_stop = True
-    while final not in visited and not_stop:
-        #print(potentiel_next)
-        next_list = get_next(current)
-        if final in next_list:
-                not_stop = False
-                break
-        for elt in next_list:
-            a = change_to_cost_for_heapq(start_end,elt)
-            if a not in potentiel_next and (a[1][0],a[1][1])not in visited and (a[1][0] != start_end[0].x or a[1][1] != start_end[0].y) :
-                heapq.heappush(potentiel_next,a)
-                coord = (a[1][0],a[1][1])
-                pygame.draw.rect(window, (250, 150, 0), (coord[0]*cells_len+2,coord[1]*cells_len+2, cells_len-4, cells_len-4))
-                pygame.display.update()
-        current_tuple = heapq.heappop(potentiel_next)[1]
-        visited[(current_tuple[0],current_tuple[1])] = current_tuple[2]
-        pygame.draw.rect(window, (250, 0,0), (current_tuple[0]*cells_len+2,current_tuple[1]*cells_len+2, cells_len-4, cells_len-4))
-        pygame.display.update()
-        current = tab[current_tuple[1]][current_tuple[0]]
-    #draw the path
-    next_cells = get_next(start_end[1])
-    current = start_end[1]
-    while start_end[0] not in next_cells:
-        next_path_coord = get_neighbor_with_small_h_cost(current,visited)
-        del visited[get_cord(current)]
-        pygame.draw.rect(window, (0, 250, 150), (next_path_coord[0]*cells_len+2,next_path_coord[1]*cells_len+2, cells_len-4, cells_len-4))
-        pygame.display.update()
+    potentiel_next = {} 
+    potentiel_next[start_end[0]] = 0
+    no_path = False
+    while start_end[1] not in visited:
+        if len(potentiel_next)==0:
+            print('no possible path')
+            no_path=True
+            break
+        current = min(potentiel_next, key=potentiel_next.get)
+        del potentiel_next[current]
+        visited[current] = f_cost(start_end,get_cord(current))
+        neighbors = get_next(current)
+        for cell in neighbors:
+            if cell not in visited:
+                if cell not in potentiel_next:
+                    potentiel_next[cell]=f_cost(start_end,get_cord(cell))
+                    pygame.draw.rect(window, (0,200,255), (cell.x*cells_len+2,cell.y*cells_len+2, cells_len-4, cells_len-4))
+                    pygame.display.update()
+                    cell.is_visited = True
+                    cell.parent = current
+    if not no_path:
+        current = start_end[1].parent
+        while current is not None:
+            current.is_path = True
+            pygame.draw.rect(window, (200,200,0), (current.x*cells_len+2,current.y*cells_len+2, cells_len-4, cells_len-4))
+            pygame.display.update()
+            current = current.parent
 
-        current =tab[next_path_coord[1]][next_path_coord[0]]
-        next_cells = get_next(current)
-        print(get_cord(current))
+
         
         
 
@@ -266,11 +267,10 @@ def main():
         fill_window(tab)
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
-            running= False
             break
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             '''left click'''
-            x, y = pygame.mouse.get_pos()
+            x, y = pygame.mouse.get_pos() 
             i,j = x//cells_len , y//cells_len
             if j<len(tab):
                 change_to_wall(i,j)
@@ -281,7 +281,8 @@ def main():
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         break
                     if j<len(tab):
-                        change_to_wall(i,j)
+                        if in_grid((i,j)):
+                            change_to_wall(i,j)
             elif len(start_end) ==2 and cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
                     event = pygame.event.poll()
@@ -291,7 +292,15 @@ def main():
                 i,j = x//cells_len , y//cells_len
                 if cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
                     dijkstra_animation(start_end)
-                
+            elif len(start_end) ==2 and 5*cells_len+2<=x<=5*cells_len+2+cells_len*3-4 and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+                while pygame.mouse.get_pressed(num_buttons=3)[0]:
+                    event = pygame.event.poll()
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        break
+                x, y = pygame.mouse.get_pos()
+                i,j = x//cells_len , y//cells_len
+                if 5*cells_len+2<=x<=5*cells_len+2+cells_len*3-4 and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+                    a_star_animation(start_end)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             '''right click'''
             x, y = pygame.mouse.get_pos()
@@ -301,14 +310,10 @@ def main():
                     if tab[j][i].is_wall == False and tab[j][i].is_start == False and tab[j][i].is_end == False:
                         if len(start_end)==0:
                             tab[j][i].is_start = True
-                            print("start, ")
                         if len(start_end)==1:
                             tab[j][i].is_end = True
-                            print("end")
                         start_end.append(tab[j][i])
         elif event.type == pygame.KEYDOWN: 
-            if event.unicode.lower() == 'a':
-                a_star_animation(start_end)
             if event.unicode.lower() == 'r':
                 for line in tab:
                     for cell in line:
@@ -317,6 +322,7 @@ def main():
                         cell.is_wall = False
                         cell.is_path = False
                         cell.is_visited = False
+                        cell.parent = None
                         cell.possible_next = ['r','l','u','d','ur','ul','dr','dl']
                 start_end = []
     pygame.quit()
