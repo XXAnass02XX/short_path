@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-from distutils import core
 from tracemalloc import start
 import pygame
 from math import sqrt 
-WIDTH,HEIGHT = 1000,700
+from random import choice 
+import time
+WIDTH,HEIGHT = 1020,700
 cells_len = 20
 MAX_FPS = 60
 WHITE =(255,255,255)
@@ -31,7 +32,6 @@ class cell:
     def draw(self,window):
         '''draw the paddle'''
         color = WHITE
-        text = font.render(f'{self.x},{self.y}', True, (0, 255, 255))
         if self.is_wall == True:
             color = BLACK
         elif self.is_start == True:
@@ -64,12 +64,53 @@ def fill_window(grid):
     window.blit(text_surface, (5.5*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
     pygame.display.update()
 
+def reset():
+    for line in tab:
+        for cell in line:
+            cell.is_end = False
+            cell.is_start =False
+            cell.is_wall = False
+            cell.is_path = False
+            cell.is_visited = False
+            cell.parent = None
+            cell.possible_next = ['r','l','u','d','ur','ul','dr','dl']
+
+
 def in_grid(a):
     '''checking if the given coordinates are in the grid or not'''
     i,j = a[0],a[1]
     if i >= 0 and i <= len(tab[0])-1 and j >= 0 and j <= len(tab)-1:
         return True
     return False
+
+def change_to_path(i,j):
+    '''giving the coordinates of a wall cell switching it to a path'''
+    cell = tab[j][i]
+    if cell.is_wall == True and cell.is_start == False and cell.is_end == False:
+        cell.is_wall = False
+        to_change = [(i-1,j-1),(i,j-1),(i+1,j-1),(i-1,j),(i+1,j),(i-1,j+1),(i,j+1),(i+1,j+1)]
+        s=0
+        for elt in to_change:
+            if in_grid(elt):
+                if s==0:
+                    tab[elt[1]][elt[0]].possible_next.append('dr')
+                elif s==1:
+                    tab[elt[1]][elt[0]].possible_next.append('d')
+                elif s==2:
+                    tab[elt[1]][elt[0]].possible_next.append('dl')
+                elif s==3:
+                    tab[elt[1]][elt[0]].possible_next.append('r')
+                elif s==4:
+                    tab[elt[1]][elt[0]].possible_next.append('l')
+                elif s==5:
+                    tab[elt[1]][elt[0]].possible_next.append('ur')
+                elif s==6:
+                    tab[elt[1]][elt[0]].possible_next.append('u')
+                else:
+                    tab[elt[1]][elt[0]].possible_next.append('ul')
+            s+=1
+        pygame.draw.rect(window, (255, 255, 255), (i*cells_len+2, j*cells_len+2, cells_len-4, cells_len-4))
+        pygame.display.update()
 
 def change_to_wall(i,j):
     '''switching the cell with the (i,j) coordinates to a wall'''
@@ -156,11 +197,13 @@ def dijkstra_animation(start_end):
     current = start_end[0]
     UnvisitedCellWithFiniteDistance = {get_cord(current):0}
     visited = []
-    no_path = False
+    end_is_found = False
     while start_end[1] not in visited :
         next_cells = get_next(current)
         for elt in next_cells:
-            if elt in visited:
+            if elt == start_end[1]:
+                end_is_found= True
+            elif elt in visited:
                 next_cells.remove(elt)
         current_coord = get_cord(current)
         current_distance = cells_dist[current_coord]
@@ -172,18 +215,19 @@ def dijkstra_animation(start_end):
                 UnvisitedCellWithFiniteDistance[coord] = current_distance + d
                 pygame.draw.rect(window, (100,200,255), ((coord[0])*cells_len+2, (coord[1])*cells_len+2, cells_len-4, cells_len-4))
         visited.append(current)
+        if current == start_end[1]:
+            end_is_found = True
         tab[current_coord[1]][current_coord[0]].is_visited = True
         current.is_visited = True
         UnvisitedCellWithFiniteDistance.pop(current_coord)
         if len(UnvisitedCellWithFiniteDistance) == 0:
-            no_path = True
-            print('no possible path')
+            print('no path is found')
             break
         current_coord = min(UnvisitedCellWithFiniteDistance, key=lambda k: UnvisitedCellWithFiniteDistance[k])
         current = tab[current_coord[1]][current_coord[0]]
         pygame.display.update()
-        #fill_window(tab)
-    if not no_path:
+    print(end_is_found)
+    if end_is_found:
         current = start_end[1]
         while current is not start_end[0]:
             '''draw the shortest path starting from the end to the start'''
@@ -222,8 +266,6 @@ def get_neighbor_with_small_h_cost(cell,d):
                 a = d[coord]
     return b
 
-    
-
 def a_star_animation(start_end):
     '''given a start point and an end point , this function does the simulation of a start algorithme for shortest path between them'''
     visited = {}
@@ -254,10 +296,60 @@ def a_star_animation(start_end):
             pygame.draw.rect(window, (200,200,0), (current.x*cells_len+2,current.y*cells_len+2, cells_len-4, cells_len-4))
             pygame.display.update()
             current = current.parent
+def possible_next_maze(a):
+    '''given a cell we check if we can still find another sell to go to when creating the maze'''
+    i,j = a[0],a[1]
+    l0 = [(i,j-2),(i-2,j),(i+2,j),(i,j+2)]
+    l1=[]
+    for elt in l0:
+        if in_grid(elt):
+            if tab[elt[1]][elt[0]].is_wall == False:
+                l1.append(elt)
+    return l1
 
+def get_unvisited_neighbors(a,visited):
+    '''given a cell we return its unvisited neighbors'''
+    i,j = a[0],a[1]
+    l0 = [(i,j-2),(i-2,j),(i+2,j),(i,j+2)]
+    l1=[]
+    for elt in l0:
+        if in_grid(elt):
+            if elt not in visited :
+                l1.append(elt)
+    return l1
 
-        
-        
+def maze_generator():
+    n,m = WIDTH//cells_len,HEIGHT//cells_len
+    print(n,m)
+    for i in range(0,n,2):
+        for j in range(0,m-2):
+            change_to_wall(i,j)
+    for j in range(0,m-2,2):
+        for i in range(0,n):
+            change_to_wall(i,j)
+    visited = {}
+    start = (1,1)
+    stack = [start]
+    visited[start]= True
+    while stack :
+        current =stack.pop()
+        unv_neighbors=get_unvisited_neighbors(current,visited)
+        if unv_neighbors:
+            neighbor = choice(unv_neighbors)
+            m,n = abs(current[0]+neighbor[0])//2,abs(current[1]+neighbor[1])//2
+            change_to_path(m,n)
+            visited[neighbor]=True
+            stack.append(current)
+            stack.append(neighbor)
+        else:
+            while stack:
+                '''keep looking for a cell where we can continue the maze'''
+                current = stack.pop()
+                unv_neighbors=get_unvisited_neighbors(current,visited)
+                if unv_neighbors:
+                    stack.append(current)
+                    break
+        pygame.display.update()
 
 def main():
     start_end = []
@@ -272,7 +364,19 @@ def main():
             '''left click'''
             x, y = pygame.mouse.get_pos() 
             i,j = x//cells_len , y//cells_len
-            if j<len(tab):
+            specific_key = pygame.key.get_pressed()[pygame.K_w]
+            if specific_key:
+                change_to_path(i,j)
+                while pygame.key.get_pressed()[pygame.K_w] and pygame.mouse.get_pressed(num_buttons=3)[0]:
+                    x, y = pygame.mouse.get_pos()
+                    i,j = x//cells_len , y//cells_len
+                    event = pygame.event.poll()
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        break
+                    if j<len(tab):
+                        if in_grid((i,j)):
+                            change_to_path(i,j)
+            elif j<len(tab):
                 change_to_wall(i,j)
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
                     x, y = pygame.mouse.get_pos()
@@ -313,18 +417,12 @@ def main():
                         if len(start_end)==1:
                             tab[j][i].is_end = True
                         start_end.append(tab[j][i])
-        elif event.type == pygame.KEYDOWN: 
+        elif event.type == pygame.KEYDOWN:
+            if event.unicode.lower() == 'm':
+                maze_generator()
             if event.unicode.lower() == 'r':
-                for line in tab:
-                    for cell in line:
-                        cell.is_end = False
-                        cell.is_start =False
-                        cell.is_wall = False
-                        cell.is_path = False
-                        cell.is_visited = False
-                        cell.parent = None
-                        cell.possible_next = ['r','l','u','d','ur','ul','dr','dl']
-                start_end = []
+                reset()
+                start_end=[]
     pygame.quit()
 
 if __name__ == '__main__':
