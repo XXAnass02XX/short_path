@@ -5,7 +5,7 @@ from math import sqrt
 from random import choice 
 import time
 WIDTH,HEIGHT = 1020,700
-cells_len = 20
+cells_len = 50 
 MAX_FPS = 60
 WHITE =(255,255,255)
 BLACK = (0,0,0)
@@ -161,7 +161,6 @@ def change_to_wall(i,j,diagonals):
         else:
             to_change = [(i,j-1),(i-1,j),(i+1,j),(i,j+1)]
             s=0
-            print('gd1')
             for elt in to_change:
                 if in_grid(elt):
                     if s==0:
@@ -272,14 +271,28 @@ def dijkstra_animation(start_end,diagonals):
             tab[current_coord[1]][current_coord[0]].is_path = True
             fill_window(tab)
 
-def g_cost(start_end,coord):
-    return sqrt(abs(start_end[0].x -coord[0])**2+ abs(start_end[0].y -coord[1])**2)
+def heuristic_dist(coord0,coord1,diagonals):
+    x0 = coord0[0]
+    y0 =coord0[1]
+    x1 = coord1[0]
+    y1 =coord1[1]
+    l = min(abs(x0-x1),abs(y0-y1))
+    L = max(abs(x0-x1),abs(y0-y1))
+    if diagonals:
+        return sqrt(2*(l**2))+L-l
+    else:
+        return L+l
 
-def h_cost(start_end,coord):
-    return sqrt(abs(start_end[1].x -coord[0])**2+ abs(start_end[1].y -coord[1])**2)
+def g_cost(start_end,coord,diagonals):
+    #return sqrt((start_end[0].x -coord[0])**2+ (start_end[0].y -coord[1])**2)
+    return heuristic_dist(get_cord(start_end[0]),coord,diagonals)
 
-def f_cost(start_end,coord):
-    return h_cost(start_end,coord)+g_cost(start_end,coord)
+def h_cost(start_end,coord,diagonals):
+    #return sqrt((start_end[1].x -coord[0])**2+ (start_end[1].y -coord[1])**2)
+    return heuristic_dist(get_cord(start_end[1]),coord,diagonals)
+
+def f_cost(start_end,coord,diagonals):
+    return h_cost(start_end,coord,diagonals)+g_cost(start_end,coord,diagonals)
 
 def change_to_cost_for_heapq(start_end,cell):
     coord = get_cord(cell)
@@ -302,29 +315,39 @@ def get_neighbor_with_small_h_cost(cell,d,diagonals):
                 a = d[coord]
     return b
 
+def next_cell(potentiel_next):
+    '''l={}
+    minimum = min(potentiel_next, key=lambda k: potentiel_next[k][1])
+    for elt in potentiel_next:
+        if potentiel_next[elt]== minimum:
+            l[elt]=potentiel_next[elt]
+    return min(l, key=lambda k: l[k][0])'''
+    return  min(potentiel_next, key=lambda k: (potentiel_next[k][1], potentiel_next[k][0]))
+
 def a_star_animation(start_end,diagonals):
     '''given a start point and an end point , this function does the simulation of a start algorithme for shortest path between them'''
     visited = {}
     potentiel_next = {} 
-    potentiel_next[start_end[0]] = 0
+    potentiel_next[start_end[0]] = (f_cost(start_end,get_cord(start_end[0]),diagonals),h_cost(start_end,get_cord(start_end[0]),diagonals))
     no_path = False
     while start_end[1] not in visited:
         if len(potentiel_next)==0:
             print('no possible path')
             no_path=True
             break
-        current = min(potentiel_next, key=potentiel_next.get)
+        #current = min(potentiel_next, key=potentiel_next.get)
+        current = next_cell(potentiel_next)
         del potentiel_next[current]
-        visited[current] = f_cost(start_end,get_cord(current))
+        visited[current] = f_cost(start_end,get_cord(current),diagonals)
         neighbors = get_next(current,diagonals)
         for cell in neighbors:
             if cell not in visited:
                 if cell not in potentiel_next:
-                    potentiel_next[cell]=f_cost(start_end,get_cord(cell))
+                    potentiel_next[cell]=(f_cost(start_end,get_cord(cell),diagonals),h_cost(start_end,get_cord(cell),diagonals))
                     pygame.draw.rect(window, (0,200,255), (cell.x*cells_len+2,cell.y*cells_len+2, cells_len-4, cells_len-4))
                     pygame.display.update()
                     cell.is_visited = True
-                    cell.parent = current
+                    cell.parent = current 
     if not no_path:
         current = start_end[1].parent
         while current is not None:
@@ -388,7 +411,6 @@ def maze_generator(diagonals):
 
 def diagonalize(diagonals):
     if not diagonals:
-        print('in2')
         for line in tab:
             for cell in line:
                 if 'ul' in cell.possible_next:
@@ -416,7 +438,7 @@ def main():
     start_end = []
     '''main fonc that displays the program window'''
     running= True
-    diagonals = True
+    diagonals = False
     while running:
         fill_window(tab)
         event = pygame.event.poll()
@@ -487,7 +509,6 @@ def main():
                 start_end=[]
             if event.unicode.lower() == 'd':
                 diagonals = not diagonals
-                print('in1',diagonals)
                 diagonalize(diagonals)
     pygame.quit()
 
