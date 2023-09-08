@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-from tracemalloc import start
 import pygame
 from math import sqrt 
-from random import choice 
+from random import choice
 import time
 WIDTH,HEIGHT = 1020,700
-cells_len = 50 
+cells_len = 20 
 MAX_FPS = 60
-WHITE =(255,255,255)
-BLACK = (0,0,0)
+WHITE =(237,246,220)
+BLACK = (10,117,145)
 GREEN = (0,255,0)
 RED = (255,0,0)
-COLOR1=(155,0,155)
+COLOR1=(76,206,132)
 pygame.init()
 window = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("pong game")
-font = pygame.font.Font(None,cells_len)
-clock = pygame.time.Clock()
+font = pygame.font.Font(None,30)
 class cell:
     def __init__(self,x,y):
         '''defining a normal cell which is not a wall at the beginning'''
@@ -41,27 +39,44 @@ class cell:
         elif self.is_path == True:
             color = (200,200,0)
         elif self.is_visited == True:
-            color = (0,200,255)
+            color = (180,150,60)
         pygame.draw.rect(window,color,(self.x*cells_len+2 ,self.y*cells_len+2 ,cells_len-4 ,cells_len -4))
 
 tab = [[cell(i,j)for i in range(WIDTH//cells_len)] for j in range(HEIGHT//cells_len-2)]
 
-def fill_window(grid):
+def fill_window(grid,diagonals):
     '''draw the image in the window'''
     window.fill(COLOR1)
     for line in grid:
         for cell in line:
             cell.draw(window)
 
-    pygame.draw.rect(window, (0, 0, 0), (cells_len, HEIGHT -2*cells_len + cells_len//2, cells_len*3, cells_len))
-    pygame.draw.rect(window, (150, 50, 150), (cells_len+2, HEIGHT -2*cells_len + cells_len//2+2, cells_len*3-4, cells_len-4))
+    pygame.draw.rect(window, (0, 0, 0), (cells_len, HEIGHT -2*cells_len + cells_len//4, cells_len*6, cells_len*1.5))
+    pygame.draw.rect(window, (237,246,220), (cells_len+2, HEIGHT -2*cells_len + cells_len//4+2, cells_len*6-4, cells_len*1.5-4))
     text_surface = font.render('dijkstra', True, (0,0,0))
-    window.blit(text_surface, (2*cells_len-10,HEIGHT -2*cells_len + cells_len//2+2))
+    window.blit(text_surface, (3*cells_len-10,HEIGHT -2*cells_len + cells_len//2+2))
 
-    pygame.draw.rect(window, (0, 0, 0), (5*cells_len, HEIGHT -2*cells_len + cells_len//2, cells_len*3, cells_len))
-    pygame.draw.rect(window, (150, 50, 150), (5*cells_len+2, HEIGHT -2*cells_len + cells_len//2+2, cells_len*3-4, cells_len-4))
-    text_surface = font.render('a start', True, (0,0,0))
-    window.blit(text_surface, (5.5*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
+    pygame.draw.rect(window, (0, 0, 0), (8*cells_len, HEIGHT -2*cells_len + cells_len//4, cells_len*6, cells_len*1.5))
+    pygame.draw.rect(window, (237,246,220), (8*cells_len+2, HEIGHT -2*cells_len + cells_len//4+2, cells_len*6-4, cells_len*1.5-4))
+    text_surface = font.render('a star', True, (0,0,0))
+    window.blit(text_surface, (10*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
+
+    # draw a switch for diagonals
+    switch_size = cells_len
+    switch_x = WIDTH - 3*switch_size
+    switch_y = HEIGHT -1.5*cells_len 
+    pygame.draw.rect(window, WHITE, (switch_x, switch_y, 2*switch_size, switch_size))
+    pygame.draw.rect(window, (0, 0, 0), (switch_x + 2, switch_y + 2, 2*switch_size - 4, switch_size - 4))
+    
+    # Draw the switch handle
+    switch_color = (0, 255, 0) if diagonals else (255, 0, 0)
+    handle_size = switch_size // 2
+    handle_x = switch_x + 2 if diagonals else switch_x + switch_size + 2
+    pygame.draw.rect(window, switch_color, (handle_x, switch_y + 2, 2*handle_size-4, switch_size - 4))
+    text_surface = font.render('Are diagonal movements allowed?', True, (0,0,0))
+    window.blit(text_surface, (30*cells_len-4,HEIGHT -2*cells_len + cells_len//2+2))
+
+
     pygame.display.update()
 
 def reset(diagonals):
@@ -128,7 +143,7 @@ def change_to_path(i,j,diagonals):
                         tab[elt[1]][elt[0]].possible_next.append('u')
                 s+=1
 
-        pygame.draw.rect(window, (255, 255, 255), (i*cells_len+2, j*cells_len+2, cells_len-4, cells_len-4))
+        pygame.draw.rect(window, (237,246,220), (i*cells_len+2, j*cells_len+2, cells_len-4, cells_len-4))
         pygame.display.update()
 
 def change_to_wall(i,j,diagonals):
@@ -172,7 +187,7 @@ def change_to_wall(i,j,diagonals):
                     else:
                         tab[elt[1]][elt[0]].possible_next.remove('u')
                 s+=1
-        pygame.draw.rect(window, (0, 0, 0), (i*cells_len+2, j*cells_len+2, cells_len-4, cells_len-4))
+        pygame.draw.rect(window, (10,117,145), (i*cells_len+2, j*cells_len+2, cells_len-4, cells_len-4))
         pygame.display.update()
 
 def get_cord(cell):
@@ -249,7 +264,7 @@ def dijkstra_animation(start_end,diagonals):
                 coord = get_cord(elt)
                 cells_dist[coord] = current_distance + d
                 UnvisitedCellWithFiniteDistance[coord] = current_distance + d
-                pygame.draw.rect(window, (100,200,255), ((coord[0])*cells_len+2, (coord[1])*cells_len+2, cells_len-4, cells_len-4))
+                pygame.draw.rect(window, (180,150,60), ((coord[0])*cells_len+2, (coord[1])*cells_len+2, cells_len-4, cells_len-4))
         visited.append(current)
         if current == start_end[1]:
             end_is_found = True
@@ -269,7 +284,7 @@ def dijkstra_animation(start_end,diagonals):
             current = get_nearest_neighbor(current,cells_dist,diagonals)
             current_coord = get_cord(current)
             tab[current_coord[1]][current_coord[0]].is_path = True
-            fill_window(tab)
+            fill_window(tab,diagonals)
 
 def heuristic_dist(coord0,coord1,diagonals):
     x0 = coord0[0]
@@ -344,7 +359,7 @@ def a_star_animation(start_end,diagonals):
             if cell not in visited:
                 if cell not in potentiel_next:
                     potentiel_next[cell]=(f_cost(start_end,get_cord(cell),diagonals),h_cost(start_end,get_cord(cell),diagonals))
-                    pygame.draw.rect(window, (0,200,255), (cell.x*cells_len+2,cell.y*cells_len+2, cells_len-4, cells_len-4))
+                    pygame.draw.rect(window, (180,150,60), (cell.x*cells_len+2,cell.y*cells_len+2, cells_len-4, cells_len-4))
                     pygame.display.update()
                     cell.is_visited = True
                     cell.parent = current 
@@ -415,22 +430,22 @@ def diagonalize(diagonals):
             for cell in line:
                 if 'ul' in cell.possible_next:
                     cell.possible_next.remove('ul')
-                elif 'ur' in cell.possible_next:
+                if 'ur' in cell.possible_next:
                     cell.possible_next.remove('ur')
-                elif 'dl' in cell.possible_next:
+                if 'dl' in cell.possible_next:
                     cell.possible_next.remove('dl')
-                elif 'dr' in cell.possible_next:
+                if 'dr' in cell.possible_next:
                     cell.possible_next.remove('dr')
     else:
         for line in tab:
             for cell in line:
                 if 'ul' not in cell.possible_next:
                     cell.possible_next.append('ul')
-                elif 'ur' not in cell.possible_next:
+                if 'ur' not in cell.possible_next:
                     cell.possible_next.append('ur')
-                elif 'dl' not in cell.possible_next:
+                if 'dl' not in cell.possible_next:
                     cell.possible_next.append('dl')
-                elif 'dr' not in cell.possible_next:
+                if 'dr' not in cell.possible_next:
                     cell.possible_next.append('dr')
 
 
@@ -440,7 +455,7 @@ def main():
     running= True
     diagonals = False
     while running:
-        fill_window(tab)
+        fill_window(tab,diagonals)
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
             break
@@ -471,23 +486,25 @@ def main():
                     if j<len(tab):
                         if in_grid((i,j)):
                             change_to_wall(i,j,diagonals)
-            elif len(start_end) ==2 and cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+            elif len(start_end) ==2 and cells_len+2<=x<=cells_len+2 + 6* cells_len and HEIGHT -2*cells_len + cells_len//4+2 <=y <=HEIGHT -2*cells_len + cells_len//4+2 + cells_len*1.5:
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
                     event = pygame.event.poll()
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         break
                 x, y = pygame.mouse.get_pos()
                 i,j = x//cells_len , y//cells_len
-                if cells_len+2<=x<=cells_len+2 + 3* cells_len and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+                (cells_len, HEIGHT -2*cells_len + cells_len//4, cells_len*6, cells_len*1.5)
+                if cells_len+2<=x<=cells_len+2 + 6* cells_len and HEIGHT -2*cells_len + cells_len//4+2 <=y <=HEIGHT -2*cells_len + cells_len//4+2 + cells_len*1.5:
                     dijkstra_animation(start_end,diagonals)
-            elif len(start_end) ==2 and 5*cells_len+2<=x<=5*cells_len+2+cells_len*3-4 and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+            elif len(start_end) ==2 and 8*cells_len+2<=x<=8*cells_len+2+cells_len*6-4 and HEIGHT -2*cells_len + cells_len//4+2<=y <=HEIGHT -2*cells_len + cells_len//4+2 + cells_len*1.5:
                 while pygame.mouse.get_pressed(num_buttons=3)[0]:
                     event = pygame.event.poll()
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         break
                 x, y = pygame.mouse.get_pos()
                 i,j = x//cells_len , y//cells_len
-                if 5*cells_len+2<=x<=5*cells_len+2+cells_len*3-4 and HEIGHT -2*cells_len + cells_len//2+2 <=y <=HEIGHT -2*cells_len + cells_len//2+2 + cells_len:
+                (8*cells_len+2, HEIGHT -2*cells_len + cells_len//4+2, cells_len*6-4, cells_len*1.5-4)
+                if 8*cells_len+2<=x<=8*cells_len+2+cells_len*6-4 and HEIGHT -2*cells_len + cells_len//4+2<=y <=HEIGHT -2*cells_len + cells_len//4+2 + cells_len*1.5:
                     a_star_animation(start_end,diagonals)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             '''right click'''
@@ -508,8 +525,21 @@ def main():
                 reset(diagonals)
                 start_end=[]
             if event.unicode.lower() == 'd':
-                diagonals = not diagonals
-                diagonalize(diagonals)
+                allowed = True
+                for line in tab:
+                    if not allowed:
+                        break
+                    for cell in line:
+                        if cell.is_wall :
+                            allowed = False
+                            text_surface = font.render('you have to reset before switching diagonals mode', True, (0,0,0))
+                            window.blit(text_surface, (300,HEIGHT//2-50))
+                            pygame.display.update()
+                            time.sleep(3)
+                            break
+                if allowed:
+                    diagonals = not diagonals
+                    diagonalize(diagonals)
     pygame.quit()
 
 if __name__ == '__main__':
