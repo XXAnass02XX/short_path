@@ -1,7 +1,1 @@
-# short_path
-finding the path in a grid from a point to another using different algorithmes ( two so far : dijkstra and a*).
-you can creat walls by holding the left click, and remove them by holding w+ left click simultaneously.
-you can generate a maze by pressing the letter m.
-to pick starting point just press right click, to choose the end point press the right click again.
-to choose which algorithme u want to visualize after chossinf the start and end points you can lft click one lf the two rectangles at the left bottom of the windows.
-to enable or disable diagonal movements you have to press d.
+Discover optimal routes through a grid-based maze using various Dijkstra algorithme and A*. Customize your maze by creating walls with a left-click (you can hold and drag it for a long wall)or removing them by holding 'W' while draging. Generate mazes instantly with a press of 'M'. Define your starting point with a right-click and set your destination with another right-click. Select your preferred algorithm for visualization by left-clicking one of the two options at the bottom left of the window. Enable or disable diagonal movements with the 'D' key for precise navigation. Explore the art of pathfinding in an interactive grid environment.
