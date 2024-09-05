@@ -1,1 +1,5 @@
-Discover optimal routes through a grid-based maze using various Dijkstra algorithme and A*. Customize your maze by creating walls with a left-click (you can hold and drag it for a long wall)or removing them by holding 'W' while draging. Generate mazes instantly with a press of 'M'. Define your starting point with a right-click and set your destination with another right-click. Select your preferred algorithm for visualization by left-clicking one of the two options at the bottom left of the window. Enable or disable diagonal movements with the 'D' key for precise navigation. Explore the art of pathfinding in an interactive grid environment.
+Discover optimal routes through a grid-based maze using various Dijkstra algorithme and A*.
+Customize your maze by creating walls with a left-click (you can hold and drag it for a long wall)or removing them by holding 'W' while draging.
+Generate mazes instantly with a press of 'M'. Define your starting point with a right-click and set your destination with another right-click. 
+Select your preferred algorithm for visualization by left-clicking one of the two options at the bottom left of the window. 
+Enable or disable diagonal movements with the 'D' key for precise navigation. Explore the art of pathfinding in an interactive grid environment.
